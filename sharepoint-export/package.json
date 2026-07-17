@@ -1,0 +1,16 @@
+{
+  "name": "sharepoint-export",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Exportiert SharePoint-Online-Sites rekursiv als HTML, DOCX und PDF",
+  "scripts": {
+    "login": "node export-pdf.mjs --login",
+    "pdf": "node export-pdf.mjs export/pages.json",
+    "merge": "node merge-pdf.mjs export"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1",
+    "playwright": "^1.49.0"
+  }
+}
