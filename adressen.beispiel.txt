@@ -1,0 +1,7 @@
+# Eine Adresse pro Zeile. Leerzeilen und Zeilen mit # werden ignoriert.
+# Optional hinter einem "|" ein eigener Dateiname (ohne .png).
+
+https://player2.zav.westermann.de/player/v1/ui?preview=true&consumerId=5bfd522a92474c060347b128&sequenceId=68527352a7109f6182c5fee9&type=sequence&reda=true
+
+# Mit eigenem Dateinamen:
+# https://example.org/seite | urlaub-in-oesterreich

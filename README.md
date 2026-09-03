@@ -66,3 +66,102 @@ die übrigen Dateien werden trotzdem verarbeitet.
 Beim verlustfreien Schneiden wird an MP3-Frame-Grenzen getrennt. Die
 Genauigkeit liegt daher bei ca. 26 Millisekunden — für Sprach- und
 Lernaudios praktisch nicht wahrnehmbar.
+
+---
+
+# Website-Screenshots: Seiten automatisch als PNG sichern
+
+Mit `website_screenshots.js` lassen sich beliebig viele Webadressen in einem
+Durchlauf aufrufen und jeweils die erste Seite als PNG in fester Breite
+(Standard: **210 px**) speichern — z.B. als Vorschaubilder für H5P-Sequenzen.
+
+Aufgenommen wird **nur der Seiteninhalt**: Der Browser läuft unsichtbar im
+Hintergrund, im Bild ist also weder Adressleiste noch Taskleiste zu sehen.
+
+Die Seite wird zuerst in voller Größe gerendert (Standard: 1280×800 bei
+doppelter Auflösung) und danach proportional auf die Zielbreite verkleinert.
+Durch dieses Verkleinern in mehreren Schritten bleibt das kleine Bild scharf
+und ruhig — deutlich besser, als den Browser direkt auf 210 px zu quetschen.
+
+## Voraussetzungen
+
+- [Node.js](https://nodejs.org/) 18 oder neuer
+- Playwright inkl. Chromium:
+
+```bash
+npm install -g playwright
+npx playwright install chromium
+```
+
+Eine Bildbearbeitung (ImageMagick o.ä.) wird **nicht** benötigt; das
+Verkleinern übernimmt der Browser selbst.
+
+## Adressliste anlegen
+
+Eine Textdatei `adressen.txt` mit einer Adresse pro Zeile:
+
+```text
+# Kommentare und Leerzeilen werden ignoriert
+https://player2.zav.westermann.de/player/v1/ui?preview=true&consumerId=...&sequenceId=68527352a7109f6182c5fee9&type=sequence&reda=true
+https://example.org/seite | urlaub-in-oesterreich
+```
+
+Hinter einem `|` lässt sich optional ein eigener Dateiname angeben (ohne
+`.png`). Ohne Angabe wird der Name aus der Adresse abgeleitet: bevorzugt aus
+`sequenceId`, `contentId` oder `id`, sonst aus Hostname und Pfad. Gleiche
+Namen werden automatisch mit `-2`, `-3` … unterschieden.
+
+## Ausführen
+
+```bash
+node website_screenshots.js adressen.txt
+```
+
+Die Bilder liegen danach unter `screenshots/`. Einzelne Adressen gehen auch
+direkt:
+
+```bash
+node website_screenshots.js "https://example.org/" "https://example.com/"
+```
+
+## Optionen
+
+| Option | Bedeutung |
+| --- | --- |
+| `--ausgang ORDNER` | Zielordner (Standard: `screenshots`) |
+| `--breite PX` | Breite des fertigen PNG (Standard: `210`) |
+| `--fenster BxH` | Renderfläche des Browsers (Standard: `1280x800`) |
+| `--ganze-seite` | gesamte scrollbare Seite statt nur der ersten Ansicht |
+| `--warten MS` | zusätzliche Wartezeit nach dem Laden (Standard: `3000`) |
+| `--warten-auf SEL` | zusätzlich auf ein CSS-Element warten, z.B. `.h5p-content` |
+| `--zeitlimit MS` | Zeitlimit je Adresse (Standard: `60000`) |
+| `--parallel N` | gleichzeitig geöffnete Seiten (Standard: `3`) |
+| `--aufloesung N` | Aufnahme-Auflösung vor dem Verkleinern (Standard: `2`) |
+| `--nummerieren` | Dateinamen mit laufender Nummer versehen (`01_`, `02_`, …) |
+
+Das Seitenverhältnis ergibt sich aus `--fenster`: 1280×800 ergibt bei 210 px
+Breite ein Bild von 210×131 px.
+
+## Beispielausgabe
+
+```
+OK      68527352a7109f6182c5fee9.png  (31.1 kB)  <- https://player2.zav.westermann.de/player/v1/ui?...
+OK      urlaub-in-oesterreich.png  (28.4 kB)  <- https://example.org/seite
+FEHLER  beispiel.png: page.goto: net::ERR_CONNECTION_REFUSED  <- http://beispiel.invalid/
+
+Fertig: 2 von 3 Screenshots erstellt (Breite 210 px, Ordner "screenshots").
+```
+
+Fehlerhafte Adressen werden einzeln gemeldet; alle übrigen werden trotzdem
+verarbeitet.
+
+## Tipps für H5P-Inhalte
+
+H5P-Seiten laden ihre Inhalte per JavaScript nach. Wenn das Bild leer oder
+nur halb aufgebaut wirkt, hilft mehr Wartezeit oder ein gezieltes Warten auf
+ein Element:
+
+```bash
+node website_screenshots.js adressen.txt --warten 8000
+node website_screenshots.js adressen.txt --warten-auf ".h5p-content"
+```
