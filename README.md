@@ -66,3 +66,58 @@ die übrigen Dateien werden trotzdem verarbeitet.
 Beim verlustfreien Schneiden wird an MP3-Frame-Grenzen getrennt. Die
 Genauigkeit liegt daher bei ca. 26 Millisekunden — für Sprach- und
 Lernaudios praktisch nicht wahrnehmbar.
+
+---
+
+# Bilder: viele JPGs auf einmal nach sRGB umwandeln
+
+Mit `jpg_nach_srgb.py` lassen sich hunderte JPG-Dateien in einem Durchlauf
+farbgetreu in den Farbraum **sRGB** umrechnen (z.B. von Adobe RGB, ProPhoto,
+Display P3, CMYK oder Graustufen). Das ist wichtig für Web/H5P, weil Browser
+Bilder ohne korrektes Profil sonst blass oder farbverfälscht anzeigen.
+
+- Das eingebettete ICC-Profil jedes Bildes wird ausgelesen und echt umgerechnet
+  (Farbmanagement über LittleCMS), nicht nur „umetikettiert".
+- Bilder, die **bereits sRGB** sind, werden bitgenau kopiert – kein
+  unnötiger Qualitätsverlust.
+- EXIF-Daten (Aufnahmedatum, Ausrichtung …) und DPI bleiben erhalten; das
+  Ergebnis bekommt ein eingebettetes sRGB-Profil.
+- Verarbeitung parallel auf allen CPU-Kernen; Originale bleiben unverändert.
+
+## Voraussetzungen
+
+- Python 3
+- Pillow: `pip install Pillow`
+
+## Ausführen
+
+```bash
+python3 jpg_nach_srgb.py bilder/
+```
+
+Die Ergebnisse liegen danach unter `bilder/srgb/` mit unverändertem
+Dateinamen. Optionen:
+
+| Option | Bedeutung |
+| --- | --- |
+| `--ausgang ORDNER` | anderer Zielordner |
+| `--unterordner` | auch Unterordner verarbeiten (Struktur bleibt erhalten) |
+| `--qualitaet 92` | JPEG-Qualität 1–100 (Standard 92) |
+| `--intent perzeptiv` | Rendering-Intent: `perzeptiv`, `relativ`, `saettigung`, `absolut` |
+| `--ohne-profil-annehmen AdobeRGB1998.icc` | Profil für Bilder **ohne** eingebettetes Profil (Standard: gelten als sRGB) |
+| `--prozesse 4` | Anzahl paralleler Prozesse |
+
+## Beispielausgabe
+
+```
+4 JPG-Dateien gefunden, Ziel: bilder/srgb
+
+[1/4] OK      foto1.jpg: Adobe RGB (1998) (RGB) -> sRGB
+[2/4] KOPIE   foto2.jpg: bereits sRGB (sRGB IEC61966-2.1), unverändert kopiert
+[3/4] OK      druck.jpg: ISO Coated v2 (ECI) (CMYK) -> sRGB
+[4/4] FEHLER  defekt.jpg: UnidentifiedImageError: cannot identify image file ...
+
+Fertig: 2 umgewandelt, 1 waren bereits sRGB, 1 Fehler.
+```
+
+Fehlerhafte Dateien werden gemeldet, die übrigen trotzdem verarbeitet.
